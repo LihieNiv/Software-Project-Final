@@ -74,6 +74,37 @@ void print_mat(double **mat, int n, int m)
     return;
 }
 
+
+//recieve mat (nXm)
+//return transposed mat (mXn)
+double **mat_transpose(double **mat, int n, int m){
+    int i, j;
+    double **trans_mat = calloc(m * n, sizeof(double));
+    for (i = 0; i < n; i++){
+        for (j = 0; j < m; j++){
+            trans_mat[j][i] = mat[i][j];
+        }
+    }
+    return trans_mat;
+}
+
+//updates h by formula
+double **update_h(double **prev_h, double **w, double beta, int n, int k){
+    int i, j;
+    double **new_h = calloc(n * k, sizeof(double));
+    double **numerator = mult_mat(w, prev_h, n, n, k);
+    double **h_on_ht = mult_mat(prev_h, mat_transpose(prev_h, n, k), n , k, n);; //temp to calc the denominator
+    double **denominator = mult_mat(h_on_ht, prev_h, n, n, k);
+
+    
+    for (i = 0; i < n; i++){
+        for (j = 0; j < k; j++){
+            new_h[i][j] = (1- beta + beta * (numerator[i][j] / denominator[i][j]));
+        }
+    }
+    return new_h;
+}
+
 int main(int argc, char **argv)
 {
     return 0;
