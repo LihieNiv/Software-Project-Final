@@ -19,7 +19,7 @@ def get_norm():
 
 
 def init_H(n, m, k, file_name):
-    H = np.random.uniform(0,2*((m/k)**0.5), n*k).reshape(n, k)
+    H = np.random.uniform(0, 2*((m/k)**0.5), n*k).reshape(n, k)
     print(H)
 
 
