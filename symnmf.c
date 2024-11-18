@@ -14,19 +14,72 @@ long long total_mem = 0;
 typedef struct cord
 {
     double value;
-    cord *next;
+    struct cord *next;
 } cord;
 
 typedef struct vector
 {
-    vector *next;
+    struct vector *next;
     cord *cords;
 } vector;
 
-double **vector_to_matrix(vector *p, int n, int k)
+double **ddg_comp(vector *data, int n);
+double *diag_deg(double **sym_mat, int n);
+double **sym_comp(vector *data, int n);
+double **norm_comp(vector *data, int n);
+vector *ddg(vector *data, int n);
+vector *sym(vector *data, int n);
+vector *norm(vector *data, int n);
+int get_length_of_vector(vector *p);
+int get_length_of_coords(cord *p);
+double **vector_to_matrix(vector *p);
+vector *matrix_to_vector(double **mat, int n, int k);
+double **mult_mat(double **matA, double **matB, int n, int k, int m);
+void print_mat(double **mat, int n, int m);
+
+int get_length_of_vector(vector *p)
+{
+    int i = 0;
+    while (p != NULL)
+    {
+        p = p->next;
+        i++;
+    }
+    return i;
+}
+int get_length_of_coords(cord *p)
+{
+    int i = 0;
+    while (p != NULL)
+    {
+        i++;
+        p = p->next;
+    }
+    return i;
+}
+
+void delete_last_vec(vector *p, int n)
+{
+    while (n > 1)
+    {
+        p = p->next;
+        n--;
+    }
+    p->next = NULL;
+}
+
+double **vector_to_matrix(vector *p)
 {
     cord *p_c = p->cords;
-    double **ret_mat = (double **)calloc(n * k, sizeof(double));
+    double **ret_mat;
+    int n, k;
+    n = get_length_of_vector(p);
+    k = get_length_of_coords(p_c);
+    ret_mat = (double **)calloc(n, sizeof(double *)); // Fix memory allocation
+    for (int i = 0; i < n; i++)
+    {
+        ret_mat[i] = (double *)calloc(k, sizeof(double)); // Allocate each row
+    }
     int i, j;
     total_mem += n * k * sizeof(double);
     i = 0;
@@ -38,9 +91,10 @@ double **vector_to_matrix(vector *p, int n, int k)
         {
             ret_mat[i][j] = p_c->value;
             p_c = p_c->next;
-            j += 1;
+            j++;
         }
-        i += 1;
+        i++;
+        p = p->next;
     }
     return ret_mat;
 }
@@ -48,22 +102,23 @@ double **vector_to_matrix(vector *p, int n, int k)
 vector *matrix_to_vector(double **mat, int n, int k)
 {
     int i, j;
-    cord *p_c;
-    vector *v_p;
-    vector *head;
+    cord *p_c, *cur_cord;
+    vector *v_p, *head;
+
     v_p = (vector *)malloc(sizeof(vector));
     head = v_p;
     for (i = 0; i < n; i++)
     {
-        p_c = (cord *)nalloc(sizeof(cord));
+        p_c = (cord *)malloc(sizeof(cord));
         v_p->cords = p_c;
+        cur_cord = p_c;
         for (j = 0; j < k; j++)
         {
-            p_c->value = mat[i][j];
+            cur_cord->value = mat[i][j];
             if (j != k - 1)
             {
-                p_c->next = (cord *)malloc(sizeof(cord));
-                p_c = p_c->next;
+                cur_cord->next = (cord *)malloc(sizeof(cord));
+                cur_cord = cur_cord->next;
             }
         }
         if (i != n - 1)
@@ -74,6 +129,58 @@ vector *matrix_to_vector(double **mat, int n, int k)
     }
     return head;
 }
+
+// Computes Euclidean Distance between two arrays.
+double euc_dist(double *x, double *y, int k)
+{
+    int i;
+    double ret;
+    ret = 0;
+    for (i = 0; i < k; i++)
+    {
+        ret += pow(x[i] - y[i], 2);
+    }
+    // printf("%.4f\n", ret);
+    return ret;
+}
+
+// Computes similarity matrix
+vector *sym(vector *data, int n)
+{
+    double **ret_mat = sym_comp(data, n);
+    return matrix_to_vector(ret_mat, n, n);
+}
+
+double **sym_comp(vector *data, int n)
+{
+    double **ret = (double **)malloc(n * sizeof(double *));
+    int i, j, k;
+    double **mat_data = vector_to_matrix(data);
+    k = get_length_of_coords(data->cords);
+    // printf("Entered! n=%d\n", n);
+    if (ret == NULL)
+    {
+        perror("Malloc failed");
+        exit(EXIT_FAILURE);
+    }
+    for (i = 0; i < n; i++)
+    {
+        ret[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
+    }
+    total_mem += n * n * sizeof(double);
+    for (i = 0; i < n; i++)
+    {
+        for (j = i + 1; j < n; j++)
+        {
+            ret[i][j] += exp(-0.5 * euc_dist(mat_data[i], mat_data[j], k));
+            ret[j][i] = ret[i][j];
+        }
+        ret[i][i] = 0;
+    }
+    // printf("Finally!\n");
+    return ret;
+}
+
 // Computes diagonal degree matrix
 vector *ddg(vector *data, int n)
 {
@@ -82,11 +189,21 @@ vector *ddg(vector *data, int n)
 }
 double **ddg_comp(vector *data, int n)
 {
-    double **ret = (double **)calloc(n * n, sizeof(double));
+
+    double **ret = (double **)malloc(n * sizeof(double *));
     double **sym_mat = sym_comp(data, n);
     int i;
     double *diag = diag_deg(sym_mat, n);
     total_mem += n * n * sizeof(double);
+    if (ret == NULL)
+    {
+        perror("Malloc failed");
+        exit(EXIT_FAILURE);
+    }
+    for (i = 0; i < n; i++)
+    {
+        ret[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
+    }
     for (int i = 0; i < n; i++)
     {
         ret[i][i] = diag[i];
@@ -113,52 +230,6 @@ double *diag_deg(double **sym_mat, int n)
     return ret;
 }
 // Computes similarity between two vectors
-double euc_dist(cord *x, cord *y)
-{
-    double ret = 0;
-    if (x == NULL || y == NULL)
-    {
-        // RAISE AN ERROR - NULL VECTOR
-        return 1;
-    }
-    while (x->next != NULL)
-    {
-        if (y->next == NULL)
-        {
-            // RAISE AN ERROR - DIFFERENT LENGTHS
-            return 1;
-        }
-        ret += (x->value - y->value) * (x->value - y->value);
-        x = x->next;
-        y = y->next;
-    }
-    ret += (x->value - y->value) * (x->value - y->value);
-    return ret;
-}
-
-// Computes similarity matrix
-vector *sym(vector *data, int n)
-{
-    double **ret_mat = sym_comp(data, n);
-    return matrix_to_vector(ret_mat, n, n);
-}
-
-double **sym_comp(vector *data, int n)
-{
-    double **ret = (double **)calloc(n * n, sizeof(double));
-    int i, j;
-    total_mem += n * n * sizeof(double);
-    for (i = 0; i < n; i++)
-    {
-        for (j = i + 1; j < n; j++)
-        {
-            ret[i][j] += exp(-0.5 * euc_dist(data[i].cords, data[j].cords));
-            ret[j][i] = ret[i][j];
-        }
-        ret[i][i] = 0;
-    }
-    return ret;
-}
 
 // Computes normalized similarity matrix
 vector *norm(vector *data, int n)
@@ -169,11 +240,20 @@ vector *norm(vector *data, int n)
 
 double **norm_comp(vector *data, int n)
 {
-    double **ret = (double **)calloc(n * n, sizeof(double));
+    double **ret = (double **)calloc(n, sizeof(double *));
     double **sym_mat = sym_comp(data, n);
     double *diag = diag_deg(sym_mat, n);
     int i, j;
     total_mem += n * n * sizeof(double);
+    if (ret == NULL)
+    {
+        perror("Malloc failed");
+        exit(EXIT_FAILURE);
+    }
+    for (i = 0; i < n; i++)
+    {
+        ret[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
+    }
     for (i = 0; i < n; i++)
     {
         diag[i] = pow(diag[i], -0.5);
@@ -236,7 +316,7 @@ void print_mat(double **mat, int n, int m)
     }
 }
 
-cord *read_line(FILE *file)
+/*cord *read_line(FILE *file)
 {
     cord *head, *cur;
     head = NULL;
@@ -289,15 +369,78 @@ cord *read_line(FILE *file)
     }
     return head;
 }
+*/
+
+vector *read_file(FILE *file)
+{
+    vector *head_vec, *curr_vec;
+    cord *head_cord, *curr_cord;
+    double n;
+    char c;
+    head_cord = malloc(sizeof(struct cord));
+    if (head_cord == NULL)
+        exit(EXIT_FAILURE);
+    head_cord->next = NULL;
+    curr_cord = head_cord;
+    curr_cord->next = NULL;
+
+    head_vec = malloc(sizeof(vector));
+    if (head_vec == NULL)
+        exit(EXIT_FAILURE);
+    head_vec->next = NULL;
+    curr_vec = head_vec;
+    curr_vec->next = NULL;
+    while (fscanf(file, "%lf%c", &n, &c) == 2)
+    {
+        if (c == '\n')
+        {
+            curr_cord->value = n;
+            curr_vec->cords = head_cord;
+            curr_vec->next = (vector *)malloc(sizeof(vector));
+            if (curr_vec->next == NULL)
+                exit(EXIT_FAILURE);
+            curr_vec = curr_vec->next;
+            curr_vec->next = NULL;
+            head_cord = malloc(sizeof(cord));
+            if (head_cord == NULL)
+                exit(EXIT_FAILURE);
+            curr_cord = head_cord;
+            curr_cord->next = NULL;
+            continue;
+        }
+        curr_cord->value = n;
+        curr_cord->next = malloc(sizeof(cord));
+        if (curr_cord->next == NULL)
+            exit(EXIT_FAILURE);
+        curr_cord = curr_cord->next;
+        curr_cord->next = NULL;
+    }
+    return head_vec;
+}
+
+int compare_strings(const char *str1, const char *str2)
+{
+    while (*str1 != '\0' && *str2 != '\0')
+    {
+        if (*str1 != *str2)
+        {
+            return 0; // strings are not equal
+        }
+        str1++;
+        str2++;
+    }
+    // If one string ends before the other, they are not equal
+    return *str1 == *str2; // return 1 if equal, 0 if not
+}
 
 int main(int argc, char **argv)
 {
     char *goal, *path;
     vector *data = NULL;
-    vector **more_data = NULL;
     cord *cur_cord = NULL;
     vector *cur_vec = NULL;
     FILE *fptr = NULL;
+    double **ret_mat;
     char new_c;
     int n = 0;
     if (argc != 3)
@@ -313,8 +456,29 @@ int main(int argc, char **argv)
         // ERROR - FAILED TO OPEN FILE
         return 1;
     }
-    while (getc(fptr) != EOF)
+    data = read_file(fptr);
+    n = get_length_of_vector(data);
+    delete_last_vec(data, n);
+    n--;
+    printf("goal: %s\n", goal);
+    if (compare_strings("ddg", goal) == 1)
     {
-        // NEED TO FINISH
+        ret_mat = ddg_comp(data, n);
+        print_mat(ret_mat, n, n);
     }
+    if (compare_strings("sym", goal) == 1)
+    {
+        printf("In here!\n");
+        ret_mat = sym_comp(data, n);
+        print_mat(ret_mat, n, n);
+    }
+    if (compare_strings(goal, "norm") == 1)
+    {
+        ret_mat = norm_comp(data, n);
+        print_mat(ret_mat, n, n);
+    }
+    /*double **mat = vector_to_matrix(data);
+    int k = get_length_of_coords(data->cords);
+    printf("n=%d, k=%d\n", n, k);
+    print_mat(mat, n, k);*/
 }
