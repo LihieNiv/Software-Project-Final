@@ -10,7 +10,7 @@
  */
 
 // Make sure all numbers use double
-long long total_mem = 0;
+long total_mem = 0;
 typedef struct cord
 {
     double value;
@@ -72,15 +72,14 @@ double **vector_to_matrix(vector *p)
 {
     cord *p_c = p->cords;
     double **ret_mat;
-    int n, k;
+    int n, k, i, j;
     n = get_length_of_vector(p);
     k = get_length_of_coords(p_c);
     ret_mat = (double **)calloc(n, sizeof(double *)); // Fix memory allocation
-    for (int i = 0; i < n; i++)
+    for (i = 0; i < n; i++)
     {
         ret_mat[i] = (double *)calloc(k, sizeof(double)); // Allocate each row
     }
-    int i, j;
     total_mem += n * k * sizeof(double);
     i = 0;
     while (p != NULL)
@@ -204,7 +203,7 @@ double **ddg_comp(vector *data, int n)
     {
         ret[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
     }
-    for (int i = 0; i < n; i++)
+    for (i = 0; i < n; i++)
     {
         ret[i][i] = diag[i];
     }
@@ -295,6 +294,12 @@ double **mult_mat(double **matA, double **matB, int n, int k, int m)
 
 double **symnmf(double **H_i, double **W, int n, int k)
 {
+    // Remember python calls this function, please make it call get_h.
+    // I added those lines just for the compiling to go through. Feel free to delete them once implemented.
+    double w = W[0][0];
+    w++;
+    n--;
+    k--;
     return H_i;
 }
 
@@ -315,61 +320,6 @@ void print_mat(double **mat, int n, int m)
         printf("\n");
     }
 }
-
-/*cord *read_line(FILE *file)
-{
-    cord *head, *cur;
-    head = NULL;
-    char c;
-    double val;
-    int flag = 1;
-    int count = 0;
-    while ((c = getc(file)) != '\n')
-    {
-        if (c == ',')
-        {
-            cur->value = val;
-            val = 0;
-            cur->next = (cord *)malloc(sizeof(cord));
-            total_mem += sizeof(cord);
-            cur = cur->next;
-            flag = 1;
-            continue;
-        }
-        if (head == NULL)
-        {
-            head = (cord *)malloc(sizeof(cord));
-            cur = head;
-            total_mem += sizeof(cord);
-        }
-        if (c == '.')
-        {
-            if (flag == 0)
-            {
-                // RAISE ERROR - %..% number
-                exit(1);
-            }
-            flag = 0;
-            count = 1;
-            continue;
-        }
-        if (c <= '0' || c >= '9')
-        {
-            // RAISE ERROR - BAD NUMBER
-            exit(1);
-        }
-        if (flag == 1)
-        {
-            val *= 10;
-            val += c - '0';
-            continue;
-        }
-        val += c * pow(10, -1 * count);
-        count++;
-    }
-    return head;
-}
-*/
 
 vector *read_file(FILE *file)
 {
@@ -486,11 +436,12 @@ double **mat_transpose(double **mat, int n, int m)
 double **get_next_h(double **prev_h, double **w, double beta, int n, int k)
 {
     int i, j;
+    double **denominator;
     double **new_h = calloc(n * k, sizeof(double));
     double **numerator = mult_mat(w, prev_h, n, n, k);
     double **h_on_ht = mult_mat(prev_h, mat_transpose(prev_h, n, k), n, k, n);
     ; // temp to calc the denominator
-    double **denominator = mult_mat(h_on_ht, prev_h, n, n, k);
+    denominator = mult_mat(h_on_ht, prev_h, n, n, k);
 
     for (i = 0; i < n; i++)
     {
@@ -515,17 +466,15 @@ double **get_h(double **init_h, double **w, int beta, int n, int k, int max_iter
             exit_flag = 1;
         }
     }
+    return h_t_next; // I ADDED THIS - IS IT OK?
 }
 
 int main(int argc, char **argv)
 {
     char *goal, *path;
     vector *data = NULL;
-    cord *cur_cord = NULL;
-    vector *cur_vec = NULL;
     FILE *fptr = NULL;
     double **ret_mat;
-    char new_c;
     int n = 0;
     if (argc != 3)
     {
@@ -561,6 +510,7 @@ int main(int argc, char **argv)
         ret_mat = norm_comp(data, n);
         print_mat(ret_mat, n, n);
     }
+    return 0;
     /*double **mat = vector_to_matrix(data);
     int k = get_length_of_coords(data->cords);
     printf("n=%d, k=%d\n", n, k);
