@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <math.h>
 
+/*NEED TO DO:
+ *Add shell functions for sym/ddg/norm
+ *Add conversion function mat->vec, vec->mat - DONE
+ *Finish reading file into MATRIX (read number of "\n","," to find it)
+ *Find out the most reasonable way to read the numbers.
+ */
+
 // Make sure all numbers use double
 long long total_mem = 0;
 typedef struct cord
@@ -16,11 +23,67 @@ typedef struct vector
     cord *cords;
 } vector;
 
+double **vector_to_matrix(vector *p, int n, int k)
+{
+    cord *p_c = p->cords;
+    double **ret_mat = (double **)calloc(n * k, sizeof(double));
+    int i, j;
+    total_mem += n * k * sizeof(double);
+    i = 0;
+    while (p != NULL)
+    {
+        p_c = p->cords;
+        j = 0;
+        while (p_c != NULL)
+        {
+            ret_mat[i][j] = p_c->value;
+            p_c = p_c->next;
+            j += 1;
+        }
+        i += 1;
+    }
+    return ret_mat;
+}
+
+vector *matrix_to_vector(double **mat, int n, int k)
+{
+    int i, j;
+    cord *p_c;
+    vector *v_p;
+    vector *head;
+    v_p = (vector *)malloc(sizeof(vector));
+    head = v_p;
+    for (i = 0; i < n; i++)
+    {
+        p_c = (cord *)nalloc(sizeof(cord));
+        v_p->cords = p_c;
+        for (j = 0; j < k; j++)
+        {
+            p_c->value = mat[i][j];
+            if (j != k - 1)
+            {
+                p_c->next = (cord *)malloc(sizeof(cord));
+                p_c = p_c->next;
+            }
+        }
+        if (i != n - 1)
+        {
+            v_p->next = (vector *)malloc(sizeof(vector));
+            v_p = v_p->next;
+        }
+    }
+    return head;
+}
 // Computes diagonal degree matrix
-double **ddg(vector *data, int n)
+vector *ddg(vector *data, int n)
+{
+    double **ret_mat = ddg_comp(data, n);
+    return matrix_to_vector(ret_mat, n, n);
+}
+double **ddg_comp(vector *data, int n)
 {
     double **ret = (double **)calloc(n * n, sizeof(double));
-    double **sym_mat = sym(data, n);
+    double **sym_mat = sym_comp(data, n);
     int i;
     double *diag = diag_deg(sym_mat, n);
     total_mem += n * n * sizeof(double);
@@ -34,7 +97,6 @@ double **ddg(vector *data, int n)
     free(diag);
     return ret;
 }
-
 // Computes diagonal degree vector (just the diagonal)
 double *diag_deg(double **sym_mat, int n)
 {
@@ -75,7 +137,13 @@ double euc_dist(cord *x, cord *y)
 }
 
 // Computes similarity matrix
-double **sym(vector *data, int n)
+vector *sym(vector *data, int n)
+{
+    double **ret_mat = sym_comp(data, n);
+    return matrix_to_vector(ret_mat, n, n);
+}
+
+double **sym_comp(vector *data, int n)
 {
     double **ret = (double **)calloc(n * n, sizeof(double));
     int i, j;
@@ -93,10 +161,16 @@ double **sym(vector *data, int n)
 }
 
 // Computes normalized similarity matrix
-double **norm(vector *data, int n)
+vector *norm(vector *data, int n)
+{
+    double **ret_mat = norm_comp(data, n);
+    return matrix_to_vector(ret_mat, n, n);
+}
+
+double **norm_comp(vector *data, int n)
 {
     double **ret = (double **)calloc(n * n, sizeof(double));
-    double **sym_mat = sym(data, n);
+    double **sym_mat = sym_comp(data, n);
     double *diag = diag_deg(sym_mat, n);
     int i, j;
     total_mem += n * n * sizeof(double);
@@ -118,7 +192,6 @@ double **norm(vector *data, int n)
     free(sym_mat);
     return ret;
 }
-
 // Matrix A: k*n, Matrix B: n*m, Matrix A*B: k*m
 double **mult_mat(double **matA, double **matB, int n, int k, int m)
 {
@@ -148,8 +221,19 @@ double **symnmf(double **H_i, double **W, int n, int k)
 // Prints a matrix of size n*m
 void print_mat(double **mat, int n, int m)
 {
-
-    return;
+    int i, j;
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < m; j++)
+        {
+            printf("%.4f", mat[i][j]);
+            if (j != m - 1)
+            {
+                printf(","); // CHECK THAT SEPARATOR IS ","
+            }
+        }
+        printf("\n");
+    }
 }
 
 cord *read_line(FILE *file)
