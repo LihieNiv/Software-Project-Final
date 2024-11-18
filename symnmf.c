@@ -509,7 +509,7 @@ double **get_h(double **init_h, double **w, int beta, int n, int k, int max_iter
 
     while (i < max_iter && exit_flag == 0)
     {
-        h_t_next = get_h_next(h_t, w, beta, n, k);
+        h_t_next = get_next_h(h_t, w, beta, n, k);
         if (squre_frob_norm(diff_mat(h_t_next, h_t, n, k), n, k) < eps)
         {
             exit_flag = 1;
