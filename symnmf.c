@@ -292,17 +292,6 @@ double **mult_mat(double **matA, double **matB, int n, int k, int m)
     return ret;
 }
 
-double **symnmf(double **H_i, double **W, int n, int k)
-{
-    // Remember python calls this function, please make it call get_h.
-    // I added those lines just for the compiling to go through. Feel free to delete them once implemented.
-    double w = W[0][0];
-    w++;
-    n--;
-    k--;
-    return H_i;
-}
-
 // Prints a matrix of size n*m
 void print_mat(double **mat, int n, int m)
 {
@@ -453,7 +442,7 @@ double **get_next_h(double **prev_h, double **w, double beta, int n, int k)
     return new_h;
 }
 
-double **get_h(double **init_h, double **w, int beta, int n, int k, int max_iter, double eps)
+double **get_h(double **init_h, double **w, double beta, int n, int k, int max_iter, double eps)
 {
     int i = 0, exit_flag = 0;
     double **h_t = init_h, **h_t_next;
@@ -467,6 +456,18 @@ double **get_h(double **init_h, double **w, int beta, int n, int k, int max_iter
         }
     }
     return h_t_next; // I ADDED THIS - IS IT OK?
+}
+
+vector *symnmf(vector *H_i, vector *W, int n, int k)
+{
+    // Remember python calls this function, please make it call get_h.
+    // I added those lines just for the compiling to go through. Feel free to delete them once implemented.
+    double **h = vector_to_matrix(H_i);
+    double **w = vector_to_matrix(W);
+    double **ret_mat = get_h(h, w, 0.5, n, k, 300, 0.0001);
+    free(h);
+    free(w);
+    return matrix_to_vector(ret_mat, n, k);
 }
 
 int main(int argc, char **argv)
