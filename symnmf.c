@@ -30,6 +30,7 @@ double **norm_comp(vector *data, int n);
 vector *ddg(vector *data, int n);
 vector *sym(vector *data, int n);
 vector *norm(vector *data, int n);
+vector *symnmf(vector *H_i, vector *W, int n, int k);
 int get_length_of_vector(vector *p);
 int get_length_of_coords(cord *p);
 double **vector_to_matrix(vector *p);
