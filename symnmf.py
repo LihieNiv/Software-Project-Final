@@ -1,19 +1,19 @@
 import numpy as np
 import pandas as pd
 import sys
-import symnmdmod as sym_mod
+import symnmf_mod as sym_mod
 np.random.seed(1234)
 
 def ddg(data, n) -> list[list]:
-    return sym_mod.ddg(data, n)
+    return sym_mod.py_ddg(data, n)
 
 
 def sym(data, n) -> list[list]:
-    return sym_mod.sym(data, n)
+    return sym_mod.py_sym(data, n)
 
 
 def norm(data, n) -> list[list]:
-    return sym_mod.norm(data, n)
+    return sym_mod.py_norm(data, n)
 
 
 def init_H(n, m, k, file_name):
@@ -26,11 +26,11 @@ def update_H():
 
 
 def symnmf(data, k, n) -> list[list]:
-    W = sym_mod.norm(data, n)
+    W = sym_mod.py_norm(data, n)
     mean_w = np.average(W)
     H = np.random.uniform(low=0, high=2 * np.sqrt(mean_w / k), shape=(n, k))
     # Check if H can be a ndarray or not, API wise
-    return sym_mod.symnmf(H, W, n, k)
+    return sym_mod.py_symnmf(H, W, n, k)
 
 
 def print_mat(mat) -> None:
