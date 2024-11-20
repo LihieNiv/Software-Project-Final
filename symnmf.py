@@ -1,19 +1,19 @@
 import numpy as np
 import pandas as pd
 import sys
-import symnmf_mod as sym_mod
+import symnmfmod as sym_mod
 np.random.seed(1234)
 
 def ddg(data, n) -> list[list]:
-    return sym_mod.py_ddg(data, n)
+    return sym_mod.ddg(data, n)
 
 
 def sym(data, n) -> list[list]:
-    return sym_mod.py_sym(data, n)
+    return sym_mod.sym(data, n)
 
 
 def norm(data, n) -> list[list]:
-    return sym_mod.py_norm(data, n)
+    return sym_mod.norm(data, n)
 
 
 def init_H(n, m, k, file_name):
@@ -26,15 +26,16 @@ def update_H():
 
 
 def symnmf(data, k, n) -> list[list]:
-    W = sym_mod.py_norm(data, n)
-    mean_w = np.average(W)
-    H = np.random.uniform(low=0, high=2 * np.sqrt(mean_w / k), shape=(n, k))
-    # Check if H can be a ndarray or not, API wise
-    return sym_mod.py_symnmf(H, W, n, k)
+    W = sym_mod.norm(data, n)
+    m = np.average(W)
+    H = np.random.uniform(0, 2*((m/k)**0.5), n*k).reshape(n, k).tolist()
+    return sym_mod.symnmf(H, W, n, k)
 
 
 def print_mat(mat) -> None:
-    assert isinstance(mat, list[list])
+    assert isinstance(mat, list)
+    for row in mat:
+        assert isinstance(row, list)
     for line in mat:
         new_line = ["%.4f" % item for item in line]
         print(",".join(new_line))
@@ -46,9 +47,8 @@ def main():
     goal = args[2]
     file_name = args[3]
     data = pd.read_csv(file_name, header=None)
+    #n = data.shape[0] #need to check if not empty?
     input = data.to_numpy().tolist()
-
-    n = len(input[0]) #need to check if input not empty?
 
     goals = {"symnmf": symnmf, "ddg": ddg, "norm": norm, "sym": sym}
     args = sys.argv
@@ -63,8 +63,8 @@ def main():
     n = 0
     with open(file_path, "r") as file:
         line = file.readline()
-        n += 1
         while line != "":
+            n += 1
             line = line.split(",")
             try:
                 line = [float(num) for num in line]
@@ -73,10 +73,12 @@ def main():
                 exit(1)
             data.append(line)
             line = file.readline()
-    res = func(data, k, n)
+    if goal == "symnmf":
+        res = func(data, k, n)
+    else:
+        res = func(data, n)
     print_mat(res)
 
-    init_H(10, 3, 4, "a")
     return
 
 if __name__ == "__main__":

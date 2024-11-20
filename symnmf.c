@@ -158,6 +158,7 @@ double **sym_comp(vector *data, int n)
     double **mat_data = vector_to_matrix(data);
     k = get_length_of_coords(data->cords);
     // printf("Entered! n=%d\n", n);
+
     if (ret == NULL)
     {
         perror("Malloc failed");
@@ -172,12 +173,11 @@ double **sym_comp(vector *data, int n)
     {
         for (j = i + 1; j < n; j++)
         {
-            ret[i][j] += exp(-0.5 * euc_dist(mat_data[i], mat_data[j], k));
+            ret[i][j] = exp(-0.5 * euc_dist(mat_data[i], mat_data[j], k));
             ret[j][i] = ret[i][j];
         }
         ret[i][i] = 0;
     }
-    // printf("Finally!\n");
     return ret;
 }
 
@@ -275,8 +275,18 @@ double **norm_comp(vector *data, int n)
 // Matrix A: k*n, Matrix B: n*m, Matrix A*B: k*m
 double **mult_mat(double **matA, double **matB, int n, int k, int m)
 {
-    double **ret = (double **)calloc(k * m, sizeof(double));
-    int i, j, p, sum;
+    int i, j, p;
+    double sum = 0;
+    double **ret = (double **)calloc(k, sizeof(double *)); // Fix memory allocation
+    for (i = 0; i < k; i++)
+    {
+        ret[i] = (double *)calloc(m, sizeof(double)); // Allocate each row
+    }
+    if (ret == NULL)
+    {
+        perror("Malloc failed");
+        exit(EXIT_FAILURE);
+    }
     total_mem += k * m * sizeof(double);
     for (i = 0; i < k; i++)
     {
@@ -377,8 +387,16 @@ int compare_strings(const char *str1, const char *str2)
 double **diff_mat(double **a, double **b, int n, int m)
 {
     int i, j;
-    double **result_mat = calloc(n * m, sizeof(double));
-
+    double **result_mat = (double **)calloc(n, sizeof(double *)); // Fix memory allocation
+    for (i = 0; i < n; i++)
+    {
+        result_mat[i] = (double *)calloc(m, sizeof(double)); // Allocate each row
+    }
+    if (result_mat == NULL)
+    {
+        perror("Malloc failed");
+        exit(EXIT_FAILURE);
+    }
     for (i = 0; i < n; i++)
     {
         for (j = 0; j < m; j++)
@@ -402,7 +420,6 @@ double squre_frob_norm(double **mat, int n, int m)
             result += pow(mat[i][j], 2);
         }
     }
-
     return result;
 }
 
@@ -411,7 +428,16 @@ double squre_frob_norm(double **mat, int n, int m)
 double **mat_transpose(double **mat, int n, int m)
 {
     int i, j;
-    double **trans_mat = calloc(m * n, sizeof(double));
+    double **trans_mat = (double **)calloc(m, sizeof(double *)); // Fix memory allocation
+    for (i = 0; i < n; i++)
+    {
+        trans_mat[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
+    }
+    if (trans_mat == NULL)
+    {
+        perror("Malloc failed");
+        exit(EXIT_FAILURE);
+    }
     for (i = 0; i < n; i++)
     {
         for (j = 0; j < m; j++)
@@ -426,18 +452,26 @@ double **mat_transpose(double **mat, int n, int m)
 double **get_next_h(double **prev_h, double **w, double beta, int n, int k)
 {
     int i, j;
+    double **new_h = (double **)calloc(n, sizeof(double *)); // Fix memory allocation
+    for (i = 0; i < n; i++)
+    {
+        new_h[i] = (double *)calloc(k, sizeof(double)); // Allocate each row
+    }
+    if (new_h == NULL)
+    {
+        perror("Malloc failed");
+        exit(EXIT_FAILURE);
+    }
     double **denominator;
-    double **new_h = calloc(n * k, sizeof(double));
     double **numerator = mult_mat(w, prev_h, n, n, k);
-    double **h_on_ht = mult_mat(prev_h, mat_transpose(prev_h, n, k), n, k, n);
-    ; // temp to calc the denominator
+    double **h_on_ht = mult_mat(prev_h, mat_transpose(prev_h, n, k), k, n, n); // temp to calc the denominator
     denominator = mult_mat(h_on_ht, prev_h, n, n, k);
 
     for (i = 0; i < n; i++)
     {
         for (j = 0; j < k; j++)
         {
-            new_h[i][j] = (1 - beta + beta * (numerator[i][j] / denominator[i][j]));
+            new_h[i][j] = prev_h[i][j]*(1 - beta + beta * (numerator[i][j] / denominator[i][j]));
         }
     }
     return new_h;
@@ -447,6 +481,8 @@ double **get_h(double **init_h, double **w, double beta, int n, int k, int max_i
 {
     int i = 0, exit_flag = 0;
     double **h_t = init_h, **h_t_next;
+    //print_mat(mult_mat(h_t, mat_transpose(h_t, n, k), k, n, n), n, n);
+    //printf("\n");
 
     while (i < max_iter && exit_flag == 0)
     {
@@ -455,8 +491,10 @@ double **get_h(double **init_h, double **w, double beta, int n, int k, int max_i
         {
             exit_flag = 1;
         }
+        free(h_t);
+        h_t = h_t_next;
     }
-    return h_t_next; // I ADDED THIS - IS IT OK?
+    return h_t; // I ADDED THIS - IS IT OK?
 }
 
 vector *symnmf(vector *H_i, vector *W, int n, int k)
@@ -466,8 +504,6 @@ vector *symnmf(vector *H_i, vector *W, int n, int k)
     double **h = vector_to_matrix(H_i);
     double **w = vector_to_matrix(W);
     double **ret_mat = get_h(h, w, 0.5, n, k, 300, 0.0001);
-    free(h);
-    free(w);
     return matrix_to_vector(ret_mat, n, k);
 }
 
@@ -503,7 +539,7 @@ int main(int argc, char **argv)
     }
     if (compare_strings("sym", goal) == 1)
     {
-        printf("In here!\n");
+        //printf("In here!\n");
         ret_mat = sym_comp(data, n);
         print_mat(ret_mat, n, n);
     }
@@ -511,6 +547,7 @@ int main(int argc, char **argv)
     {
         ret_mat = norm_comp(data, n);
         print_mat(ret_mat, n, n);
+
     }
     return 0;
     /*double **mat = vector_to_matrix(data);
