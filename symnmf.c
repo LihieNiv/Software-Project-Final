@@ -9,7 +9,6 @@
  *Find out the most reasonable way to read the numbers.
  */
 
-// Make sure all numbers use double
 long total_mem = 0;
 typedef struct cord
 {
@@ -76,10 +75,10 @@ double **vector_to_matrix(vector *p)
     int n, k, i, j;
     n = get_length_of_vector(p);
     k = get_length_of_coords(p_c);
-    ret_mat = (double **)calloc(n, sizeof(double *)); // Fix memory allocation
+    ret_mat = (double **)calloc(n, sizeof(double *));
     for (i = 0; i < n; i++)
     {
-        ret_mat[i] = (double *)calloc(k, sizeof(double)); // Allocate each row
+        ret_mat[i] = (double *)calloc(k, sizeof(double));
     }
     total_mem += n * k * sizeof(double);
     i = 0;
@@ -130,7 +129,9 @@ vector *matrix_to_vector(double **mat, int n, int k)
     return head;
 }
 
-// Computes Euclidean Distance between two arrays.
+/*
+Computes Euclidean Distance between two arrays.
+*/
 double euc_dist(double *x, double *y, int k)
 {
     int i;
@@ -140,11 +141,12 @@ double euc_dist(double *x, double *y, int k)
     {
         ret += pow(x[i] - y[i], 2);
     }
-    // printf("%.4f\n", ret);
     return ret;
 }
 
-// Computes similarity matrix
+/*
+Computes similarity matrix
+*/
 vector *sym(vector *data, int n)
 {
     double **ret_mat = sym_comp(data, n);
@@ -157,7 +159,6 @@ double **sym_comp(vector *data, int n)
     int i, j, k;
     double **mat_data = vector_to_matrix(data);
     k = get_length_of_coords(data->cords);
-    // printf("Entered! n=%d\n", n);
 
     if (ret == NULL)
     {
@@ -166,7 +167,7 @@ double **sym_comp(vector *data, int n)
     }
     for (i = 0; i < n; i++)
     {
-        ret[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
+        ret[i] = (double *)calloc(n, sizeof(double));
     }
     total_mem += n * n * sizeof(double);
     for (i = 0; i < n; i++)
@@ -181,7 +182,9 @@ double **sym_comp(vector *data, int n)
     return ret;
 }
 
-// Computes diagonal degree matrix
+/*
+Computes diagonal degree matrix
+*/
 vector *ddg(vector *data, int n)
 {
     double **ret_mat = ddg_comp(data, n);
@@ -202,7 +205,7 @@ double **ddg_comp(vector *data, int n)
     }
     for (i = 0; i < n; i++)
     {
-        ret[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
+        ret[i] = (double *)calloc(n, sizeof(double));
     }
     for (i = 0; i < n; i++)
     {
@@ -214,7 +217,10 @@ double **ddg_comp(vector *data, int n)
     free(diag);
     return ret;
 }
-// Computes diagonal degree vector (just the diagonal)
+
+/*
+Computes diagonal degree vector (just the diagonal)
+*/
 double *diag_deg(double **sym_mat, int n)
 {
     double *ret = (double *)calloc(n, sizeof(double));
@@ -229,9 +235,11 @@ double *diag_deg(double **sym_mat, int n)
     }
     return ret;
 }
-// Computes similarity between two vectors
 
-// Computes normalized similarity matrix
+
+/*
+Computes normalized similarity matrix
+*/
 vector *norm(vector *data, int n)
 {
     double **ret_mat = norm_comp(data, n);
@@ -252,7 +260,7 @@ double **norm_comp(vector *data, int n)
     }
     for (i = 0; i < n; i++)
     {
-        ret[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
+        ret[i] = (double *)calloc(n, sizeof(double));
     }
     for (i = 0; i < n; i++)
     {
@@ -272,15 +280,17 @@ double **norm_comp(vector *data, int n)
     free(sym_mat);
     return ret;
 }
-// Matrix A: k*n, Matrix B: n*m, Matrix A*B: k*m
+/*
+Matrix A: k*n, Matrix B: n*m, Matrix A*B: k*m
+*/
 double **mult_mat(double **matA, double **matB, int n, int k, int m)
 {
     int i, j, p;
     double sum = 0;
-    double **ret = (double **)calloc(k, sizeof(double *)); // Fix memory allocation
+    double **ret = (double **)calloc(k, sizeof(double *));
     for (i = 0; i < k; i++)
     {
-        ret[i] = (double *)calloc(m, sizeof(double)); // Allocate each row
+        ret[i] = (double *)calloc(m, sizeof(double));
     }
     if (ret == NULL)
     {
@@ -303,7 +313,9 @@ double **mult_mat(double **matA, double **matB, int n, int k, int m)
     return ret;
 }
 
-// Prints a matrix of size n*m
+/*
+Prints a matrix of size n*m
+*/
 void print_mat(double **mat, int n, int m)
 {
     int i, j;
@@ -314,7 +326,7 @@ void print_mat(double **mat, int n, int m)
             printf("%.4f", mat[i][j]);
             if (j != m - 1)
             {
-                printf(","); // CHECK THAT SEPARATOR IS ","
+                printf(",");
             }
         }
         printf("\n");
@@ -374,23 +386,25 @@ int compare_strings(const char *str1, const char *str2)
     {
         if (*str1 != *str2)
         {
-            return 0; // strings are not equal
+            return 0; /*strings are not equal*/
         }
         str1++;
         str2++;
     }
-    // If one string ends before the other, they are not equal
-    return *str1 == *str2; // return 1 if equal, 0 if not
+    /* If one string ends before the other, they are not equal */
+    return *str1 == *str2; /*return 1 if equal, 0 if not*/ 
 }
 
-// calc A - B, size n X m each.
+/*
+calc A - B, size n X m each.
+*/ 
 double **diff_mat(double **a, double **b, int n, int m)
 {
     int i, j;
-    double **result_mat = (double **)calloc(n, sizeof(double *)); // Fix memory allocation
+    double **result_mat = (double **)calloc(n, sizeof(double *));
     for (i = 0; i < n; i++)
     {
-        result_mat[i] = (double *)calloc(m, sizeof(double)); // Allocate each row
+        result_mat[i] = (double *)calloc(m, sizeof(double));
     }
     if (result_mat == NULL)
     {
@@ -407,7 +421,9 @@ double **diff_mat(double **a, double **b, int n, int m)
     return result_mat;
 }
 
-// calc squre of Frobenius norm of mat size n X m
+/*
+calc squre of Frobenius norm of mat size n X m
+*/
 double squre_frob_norm(double **mat, int n, int m)
 {
     int i, j;
@@ -423,15 +439,17 @@ double squre_frob_norm(double **mat, int n, int m)
     return result;
 }
 
-// recieve mat (nXm)
-// return transposed mat (mXn)
+/*
+recieve mat (nXm)
+return transposed mat (mXn)
+*/
 double **mat_transpose(double **mat, int n, int m)
 {
     int i, j;
-    double **trans_mat = (double **)calloc(m, sizeof(double *)); // Fix memory allocation
+    double **trans_mat = (double **)calloc(m, sizeof(double *));
     for (i = 0; i < n; i++)
     {
-        trans_mat[i] = (double *)calloc(n, sizeof(double)); // Allocate each row
+        trans_mat[i] = (double *)calloc(n, sizeof(double));
     }
     if (trans_mat == NULL)
     {
@@ -448,23 +466,24 @@ double **mat_transpose(double **mat, int n, int m)
     return trans_mat;
 }
 
-// get next h by formula
+/*
+get next h by formula
+*/
 double **get_next_h(double **prev_h, double **w, double beta, int n, int k)
 {
     int i, j;
-    double **new_h = (double **)calloc(n, sizeof(double *)); // Fix memory allocation
+    double **numerator, **h_on_ht, **denominator, **new_h = (double **)calloc(n, sizeof(double *));
     for (i = 0; i < n; i++)
     {
-        new_h[i] = (double *)calloc(k, sizeof(double)); // Allocate each row
+        new_h[i] = (double *)calloc(k, sizeof(double));
     }
     if (new_h == NULL)
     {
         perror("Malloc failed");
         exit(EXIT_FAILURE);
     }
-    double **denominator;
-    double **numerator = mult_mat(w, prev_h, n, n, k);
-    double **h_on_ht = mult_mat(prev_h, mat_transpose(prev_h, n, k), k, n, n); // temp to calc the denominator
+    numerator = mult_mat(w, prev_h, n, n, k);
+    h_on_ht = mult_mat(prev_h, mat_transpose(prev_h, n, k), k, n, n); /*temp to calc the denominator*/
     denominator = mult_mat(h_on_ht, prev_h, n, n, k);
 
     for (i = 0; i < n; i++)
@@ -481,8 +500,6 @@ double **get_h(double **init_h, double **w, double beta, int n, int k, int max_i
 {
     int i = 0, exit_flag = 0;
     double **h_t = init_h, **h_t_next;
-    //print_mat(mult_mat(h_t, mat_transpose(h_t, n, k), k, n, n), n, n);
-    //printf("\n");
 
     while (i < max_iter && exit_flag == 0)
     {
@@ -494,13 +511,11 @@ double **get_h(double **init_h, double **w, double beta, int n, int k, int max_i
         free(h_t);
         h_t = h_t_next;
     }
-    return h_t; // I ADDED THIS - IS IT OK?
+    return h_t;
 }
 
 vector *symnmf(vector *H_i, vector *W, int n, int k)
 {
-    // Remember python calls this function, please make it call get_h.
-    // I added those lines just for the compiling to go through. Feel free to delete them once implemented.
     double **h = vector_to_matrix(H_i);
     double **w = vector_to_matrix(W);
     double **ret_mat = get_h(h, w, 0.5, n, k, 300, 0.0001);
@@ -516,7 +531,7 @@ int main(int argc, char **argv)
     int n = 0;
     if (argc != 3)
     {
-        // ERROR - WRONG NUMBER OF PARAMETERS.
+        /*ERROR - WRONG NUMBER OF PARAMETERS.*/
         return 1;
     }
     goal = argv[1];
@@ -524,7 +539,7 @@ int main(int argc, char **argv)
     fptr = fopen(path, "r");
     if (fptr == NULL)
     {
-        // ERROR - FAILED TO OPEN FILE
+        /*ERROR - FAILED TO OPEN FILE*/
         return 1;
     }
     data = read_file(fptr);
@@ -539,7 +554,6 @@ int main(int argc, char **argv)
     }
     if (compare_strings("sym", goal) == 1)
     {
-        //printf("In here!\n");
         ret_mat = sym_comp(data, n);
         print_mat(ret_mat, n, n);
     }
