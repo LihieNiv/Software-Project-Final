@@ -80,7 +80,6 @@ static PyObject* py_norm(PyObject* self, PyObject* args) {
     PyObject* py_result = convert_vector_to_pylist(result);
 
     /* Cleanup */
-    free(data);
 
     return py_result;
 }
@@ -102,7 +101,6 @@ static PyObject* py_ddg(PyObject* self, PyObject* args) {
     PyObject* py_result = convert_vector_to_pylist(result);
 
     /* Cleanup */
-    free(data);
 
     return py_result;
 }
@@ -122,9 +120,6 @@ static PyObject* py_sym(PyObject* self, PyObject* args) {
     struct vector *result = sym(data, n);
 
     PyObject* py_result = convert_vector_to_pylist(result);
-
-    free(data);
-
     return py_result;
 }
 
@@ -141,7 +136,7 @@ static PyObject* py_symnmf(PyObject* self, PyObject* args) {
     if (!H) return NULL;
 
     struct vector *W = convert_pylist_to_vector(py_W);
-    if (!H) return NULL;
+    if (!W) return NULL;
     
     struct vector *result = symnmf(H, W, n, k);
     PyObject* py_result = convert_vector_to_pylist(result);
@@ -151,23 +146,23 @@ static PyObject* py_symnmf(PyObject* self, PyObject* args) {
 
 /* Method definitions */
 static PyMethodDef SymnmfMethods[] = {
-    {"norm", py_norm, METH_VARARGS, "Calculate the norm of the data"},
-    {"ddg", py_ddg, METH_VARARGS, "Calculate the diagonal degree matrix"},
-    {"sym", py_sym, METH_VARARGS, "Calculate the symmetric matrix"},
-    {"symnmf", py_symnmf, METH_VARARGS, "Calculate full symnmf"},
-    {NULL, NULL, 0, NULL} // Sentinel
+    {"norm", (PyCFunction) py_norm, METH_VARARGS, "Calculate the norm of the data"},
+    {"ddg", (PyCFunction) py_ddg, METH_VARARGS, "Calculate the diagonal degree matrix"},
+    {"sym", (PyCFunction) py_sym, METH_VARARGS, "Calculate the symmetric matrix"},
+    {"symnmf", (PyCFunction) py_symnmf, METH_VARARGS, "Calculate full symnmf"},
+    {NULL, NULL, 0, NULL}
 };
 
 /* Module definition */
 static struct PyModuleDef symnmfmodule = {
     PyModuleDef_HEAD_INIT,
-    "symnmf_mod",
+    "symnmfmod",
     "A module that wraps C functions",
     -1,
     SymnmfMethods
 };
 
 // Initialize the module
-PyMODINIT_FUNC PyInit_symnmf_mod(void) {
+PyMODINIT_FUNC PyInit_symnmfmod(void) {
     return PyModule_Create(&symnmfmodule);
 }
