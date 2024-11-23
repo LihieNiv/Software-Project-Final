@@ -1,28 +1,37 @@
 import numpy as np
 import sys
-import symnmfmod as sym_mod
+import symnmf_mod as sym_mod
 
 np.random.seed(1234)
 
 
-def ddg(data, k, n) -> list[list]:
-    return sym_mod.ddg(data, n)
+def ddg(data, n) -> list[list]:
+    return sym_mod.py_ddg(data, n)
 
 
-def sym(data, k, n) -> list[list]:
-    return sym_mod.sym(data, n)
+def sym(data, n) -> list[list]:
+    return sym_mod.py_sym(data, n)
 
 
-def norm(data, k, n) -> list[list]:
-    return sym_mod.norm(data, n)
+def norm(data, n) -> list[list]:
+    return sym_mod.py_norm(data, n)
+
+
+def init_H(n, m, k, file_name):
+    h = np.random.uniform(0, 2 * ((m / k) ** 0.5), n * k).reshape(n, k)
+    print(h)
+
+
+def update_H():
+    return
 
 
 def symnmf(data, k, n) -> list[list]:
-    W = norm(data, n)
+    W = sym_mod.py_norm(data, n)
     mean_w = np.average(W)
     H = np.random.uniform(low=0, high=2 * np.sqrt(mean_w / k), shape=(n, k))
     # Check if H can be a ndarray or not, API wise
-    return sym_mod.symnmf(H, W, n, k)
+    return sym_mod.py_symnmf(H, W, n, k)
 
 
 def print_mat(mat) -> None:
@@ -32,7 +41,16 @@ def print_mat(mat) -> None:
         print(",".join(new_line))
 
 
-if __name__ == "__main__":
+def main():
+    args = sys.argv
+    k = int(args[1])
+    goal = args[2]
+    file_name = args[3]
+    data = pd.read_csv(file_name, header=None)
+    input = data.to_numpy().tolist()
+
+    n = len(input[0])  # need to check if input not empty?
+
     goals = {"symnmf": symnmf, "ddg": ddg, "norm": norm, "sym": sym}
     args = sys.argv
     k = int(args[1])
@@ -58,3 +76,10 @@ if __name__ == "__main__":
             line = file.readline()
     res = func(data, k, n)
     print_mat(res)
+
+    init_H(10, 3, 4, "a")
+    return
+
+
+if __name__ == "__main__":
+    main()

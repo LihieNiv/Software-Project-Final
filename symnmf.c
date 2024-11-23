@@ -23,37 +23,17 @@ typedef struct vector
     cord *cords;
 } vector;
 
-double **ddg_comp(vector *data, int n);
-double *diag_deg(double **sym_mat, int n);
-double **sym_comp(vector *data, int n);
-double **norm_comp(vector *data, int n);
-vector *ddg(vector *data, int n);
-vector *sym(vector *data, int n);
-vector *norm(vector *data, int n);
-int get_length_of_vector(vector *p);
-int get_length_of_coords(cord *p);
-double **vector_to_matrix(vector *p);
-vector *matrix_to_vector(double **mat, int n, int k);
-double **mult_mat(double **matA, double **matB, int n, int k, int m);
-void print_mat(double **mat, int n, int m);
-
-int get_length_of_vector(vector *p)
+// calc square euclidean distsance
+double euc_dst(struct vector *x, struct vector *y)
 {
-    int i = 0;
-    while (p != NULL)
+    double sum = 0.0;
+    struct cord *curr_cord_x = x->cords;
+    struct cord *curr_cord_y = y->cords;
+    while (curr_cord_x != NULL)
     {
-        p = p->next;
-        i++;
-    }
-    return i;
-}
-int get_length_of_coords(cord *p)
-{
-    int i = 0;
-    while (p != NULL)
-    {
-        i++;
-        p = p->next;
+        sum += pow(curr_cord_x->value - curr_cord_y->value, 2);
+        curr_cord_x = curr_cord_x->next;
+        curr_cord_y = curr_cord_y->next;
     }
     return i;
 }
@@ -294,12 +274,6 @@ double **mult_mat(double **matA, double **matB, int n, int k, int m)
 
 double **symnmf(double **H_i, double **W, int n, int k)
 {
-    // Remember python calls this function, please make it call get_h.
-    // I added those lines just for the compiling to go through. Feel free to delete them once implemented.
-    double w = W[0][0];
-    w++;
-    n--;
-    k--;
     return H_i;
 }
 
@@ -466,7 +440,6 @@ double **get_h(double **init_h, double **w, int beta, int n, int k, int max_iter
             exit_flag = 1;
         }
     }
-    return h_t_next; // I ADDED THIS - IS IT OK?
 }
 
 int main(int argc, char **argv)

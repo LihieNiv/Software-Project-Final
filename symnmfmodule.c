@@ -1,16 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-
-struct cord {
-    double value;
-    struct cord *next;
-};
-
-struct vector {
-    struct vector *next;
-    struct cord *cords;
-};
-
+#include "symnmf.h"
 
 // Helper function to convert a Python list of lists to a vector linked list
 struct vector* convert_pylist_to_vector(PyObject *pylist) {
@@ -71,4 +61,113 @@ PyObject* convert_vector_to_pylist(struct vector *head) {
     }
 
     return pylist;
+}
+
+/* Python wrapper for `norm` */
+static PyObject* py_norm(PyObject* self, PyObject* args) {
+    PyObject* py_data;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "Oi", &py_data, &n)) {
+        return NULL;
+    }
+
+    struct vector *data = convert_pylist_to_vector(py_data);
+    if (!data) return NULL;
+
+    struct vector *result = norm(data, n);
+
+    PyObject* py_result = convert_vector_to_pylist(result);
+
+    /* Cleanup */
+    free(data);
+
+    return py_result;
+}
+
+/* Python wrapper for `ddg` */
+static PyObject* py_ddg(PyObject* self, PyObject* args) {
+    PyObject* py_data;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "Oi", &py_data, &n)) {
+        return NULL;
+    }
+
+    struct vector *data = convert_pylist_to_vector(py_data);
+    if (!data) return NULL;
+
+    struct vector *result = ddg(data, n);
+
+    PyObject* py_result = convert_vector_to_pylist(result);
+
+    /* Cleanup */
+    free(data);
+
+    return py_result;
+}
+
+/* Python wrapper for `sym` */
+static PyObject* py_sym(PyObject* self, PyObject* args) {
+    PyObject* py_data;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "Oi", &py_data, &n)) {
+        return NULL;
+    }
+
+    struct vector* data = convert_pylist_to_vector(py_data);
+    if (!data) return NULL;
+
+    struct vector *result = sym(data, n);
+
+    PyObject* py_result = convert_vector_to_pylist(result);
+
+    free(data);
+
+    return py_result;
+}
+
+
+static PyObject* py_symnmf(PyObject* self, PyObject* args) {
+    PyObject *py_H, *py_W;
+    int n, k;
+
+    if (!PyArg_ParseTuple(args, "OOii", &py_H, &py_W, &n, &k)) {
+        return NULL;
+    }
+
+    struct vector *H = convert_pylist_to_vector(py_H);
+    if (!H) return NULL;
+
+    struct vector *W = convert_pylist_to_vector(py_W);
+    if (!H) return NULL;
+    
+    struct vector *result = symnmf(H, W, n, k);
+    PyObject* py_result = convert_vector_to_pylist(result);
+
+    return py_result;
+}
+
+/* Method definitions */
+static PyMethodDef SymnmfMethods[] = {
+    {"norm", py_norm, METH_VARARGS, "Calculate the norm of the data"},
+    {"ddg", py_ddg, METH_VARARGS, "Calculate the diagonal degree matrix"},
+    {"sym", py_sym, METH_VARARGS, "Calculate the symmetric matrix"},
+    {"symnmf", py_symnmf, METH_VARARGS, "Calculate full symnmf"},
+    {NULL, NULL, 0, NULL} // Sentinel
+};
+
+/* Module definition */
+static struct PyModuleDef symnmfmodule = {
+    PyModuleDef_HEAD_INIT,
+    "symnmf_mod",
+    "A module that wraps C functions",
+    -1,
+    SymnmfMethods
+};
+
+// Initialize the module
+PyMODINIT_FUNC PyInit_symnmf_mod(void) {
+    return PyModule_Create(&symnmfmodule);
 }
